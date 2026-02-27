@@ -1,0 +1,74 @@
+const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
+
+const userSchema = new mongoose.Schema({
+  nom: {
+    type: String,
+    required: [true, 'Le nom est requis'],
+    trim: true
+  },
+  telephone: {
+    type: String,
+    required: [true, 'Le téléphone est requis'],
+    unique: true,
+    trim: true
+  },
+  email: {
+    type: String,
+    required: [true, 'L\'email est requis'],
+    unique: true,
+    lowercase: true,
+    trim: true
+  },
+  password: {
+    type: String,
+    required: [true, 'Le mot de passe est requis'],
+    minlength: 6
+  },
+  role: {
+    type: String,
+    enum: ['fournisseur', 'acheteur'],
+    required: true
+  },
+  localisation: {
+    ville: { type: String, required: true },
+    quartier: { type: String, required: true }
+  },
+  typeProduit: {
+    type: String,
+    enum: ['fruits', 'legumes', null],
+    default: null
+  },
+  photoProfil: {
+    type: String,
+    default: ''
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
+});
+
+// Hash du mot de passe avant sauvegarde - VERSION CORRIGÉE
+userSchema.pre('save', async function(next) {
+  try {
+    // Vérifier si le mot de passe a été modifié
+    if (!this.isModified('password')) {
+      return next();
+    }
+    
+    // Générer un salt et hasher le mot de passe
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Méthode pour comparer les mots de passe
+userSchema.methods.comparePassword = async function(candidatePassword) {
+  return await bcrypt.compare(candidatePassword, this.password);
+};
+
+module.exports = mongoose.model('User', userSchema);
