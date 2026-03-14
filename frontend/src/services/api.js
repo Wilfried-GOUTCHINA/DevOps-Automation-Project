@@ -1,10 +1,13 @@
 import axios from 'axios';
 
+// Utilise la variable d'env si disponible, sinon l'URL fixe de ton backend
+const API_URL = process.env.REACT_APP_API_URL || 'https://devops-automation-project.onrender.com/api';
+
 const API = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api'
+  baseURL: API_URL
 });
 
-// Intercepteur pour ajouter le token JWT aux requêtes
+// Intercepteur pour le token
 API.interceptors.request.use((req) => {
   const token = localStorage.getItem('token');
   if (token) {
@@ -13,6 +16,7 @@ API.interceptors.request.use((req) => {
   return req;
 });
 
+// Fonctions API
 export const login = (formData) => API.post('/auth/login', formData);
 export const register = (formData) => API.post('/auth/register', formData);
 export const fetchProducts = () => API.get('/products');
